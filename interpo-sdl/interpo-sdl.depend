@@ -1,0 +1,130 @@
+# depslib dependency file v1.0
+1334075292 source:/home/mathieu/documents/interpo-sdl/Main.cpp
+	<iostream>
+	"interpoApp.h"
+
+1334075292 p.h"
+
+1334075012 /home/mathieu/documents/interpo-sdl/interpoApp.h
+	<string>
+
+1334257622 
+
+1334076054 source:/home/mathieu/documents/interpo-sdl/interpoApp.cpp
+	<iostream>
+	<fstream>
+	"interpoApp.h"
+	<string>
+	<stdio.h>
+
+1334074649 source:/home/mathieu/documents/interpo-sdl/libsdl.cpp
+	<stdio.h>
+	<stdlib.h>
+	<SDL/SDL.h>
+
+1334257158 >
+
+1334065074 source:d:\interpo-sdl\main.cpp
+	<cstdlib>
+	<stdlib.h>
+	<SDL/SDL.h>
+	<SDL.h>
+
+1334249194 source:d:\interpo-sdl\interpoapp.cpp
+	<iostream>
+	<fstream>
+	"interpoApp.h"
+	<string>
+	<stdio.h>
+	<stdlib.h>
+
+1334257466 d:\interpo-sdl\interpoapp.h
+	<string>
+
+1334257560 source:d:\interpo-sdl\libsdl.cpp
+	<iostream>
+	<SDL/SDL.h>
+	<stdio.h>
+	<stdlib.h>
+	"libsdl.h"
+
+1334257580 d:\interpo-sdl\libsdl.h
+	<SDL/SDL.h>
+
+1334257158 source:d:\interpo-sdl\frame.cpp
+	"Frame.h"
+	"libsdl.h"
+	<SDL/SDL.h>
+
+1334257622 d:\interpo-sdl\frame.h
+	<SDL/SDL.h>
+	"libsdl.h"
+
+1334282112 source:/media/disk/interpo-sdl/Frame.cpp
+	"Frame.h"
+	"libsdl.h"
+	<SDL/SDL.h>
+
+1334281292 /media/disk/interpo-sdl/Frame.h
+	<SDL/SDL.h>
+	"libsdl.h"
+
+1334257580 /media/disk/interpo-sdl/libsdl.h
+	<SDL/SDL.h>
+
+1334249194 source:/media/disk/interpo-sdl/interpoApp.cpp
+	<iostream>
+	<fstream>
+	"interpoApp.h"
+	<string>
+	<stdio.h>
+	<stdlib.h>
+
+1334257466 /media/disk/interpo-sdl/interpoApp.h
+	<string>
+
+1334257560 source:/media/disk/interpo-sdl/libsdl.cpp
+	<iostream>
+	<SDL/SDL.h>
+	<stdio.h>
+	<stdlib.h>
+	"libsdl.h"
+
+1334418043 source:/home/mathieu/swordkey/mnt/interpo-sdl/Frame.cpp
+	"Frame.h"
+	"libsdl.h"
+	<SDL/SDL.h>
+
+1334350453 /home/mathieu/swordkey/mnt/interpo-sdl/Frame.h
+	<SDL/SDL.h>
+	"libsdl.h"
+	"interpoApp.h"
+
+1334424422 /home/mathieu/swordkey/mnt/interpo-sdl/libsdl.h
+	<SDL/SDL.h>
+	<SDL/SDL_ttf.h>
+
+1334415173 source:/home/mathieu/swordkey/mnt/interpo-sdl/interpoApp.cpp
+	<iostream>
+	<fstream>
+	"interpoApp.h"
+	<string>
+	<stdio.h>
+	<stdlib.h>
+
+1334414999 /home/mathieu/swordkey/mnt/interpo-sdl/interpoApp.h
+	<string>
+
+1334424560 source:/home/mathieu/swordkey/mnt/interpo-sdl/libsdl.cpp
+	<iostream>
+	<SDL/SDL.h>
+	<stdio.h>
+	<stdlib.h>
+	"libsdl.h"
+	<SDL/SDL_ttf.h>
+
+1334293214 source:/home/mathieu/swordkey/mnt/interpo-sdl/Main.cpp
+	<SDL/SDL.h>
+	"Frame.h"
+	<iostream>
+
