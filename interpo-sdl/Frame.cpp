@@ -1,6 +1,5 @@
 //Utilise libsdl pour dessiner la fenêtre
 
-
 #include "Frame.h"
 #include "libsdl.h"
 #include <SDL/SDL.h>
@@ -22,41 +21,63 @@ Frame::Frame() : lib(Frame_L,Frame_H,lib.couleurs[C_GRIS])  //2fois lameme coule
     text = NULL;
     screen = lib.getScreen(); //bientot deprecate
 
-
+    //espace d'affichage
     rec_work.h = (Frame_H)/5*4;
     rec_work.w = (Frame_L)/5*4;
     rec_work.x=10;
     rec_work.y=10;
+    workspace = SDL_CreateRGBSurface(SDL_SWSURFACE,rec_work.w,rec_work.h,32,0,0,0,0 );
 
-    rec_text.h= (Frame_H)/5 -100;
+    //espace de texte sous l'espace d'affichage
+    rec_text.h= (Frame_H)/5 *.5;
     rec_text.w = rec_work.w ;
     rec_text.x= rec_work.x;
     rec_text.y = rec_work.h+ rec_work.y +8;
-    workspace = SDL_CreateRGBSurface(SDL_SWSURFACE,rec_work.w,rec_work.h,32,0,0,0,0 );
     textZone =  SDL_CreateRGBSurface(SDL_SWSURFACE,rec_text.w,rec_text.h,32,0,0,0,0 );
 
-    txt.cfg = {0,0,0};
-    txt.cbg = {0xFF,0xFF,0xFF};
+
+    //zone d'entrer des paramêtres
+    rec_param.y= Frame_H/5*3-10;
+    rec_param.w= Frame_L/5*.9;
+    rec_param.x= Frame_L/5*4+(Frame_L/5-rec_param.w)/2;
+    rec_param.h= Frame_L/5*2;
+    paramBox = SDL_CreateRGBSurface(SDL_SWSURFACE,rec_param.w,rec_param.h,32,0,0,0,0 );
+
+
+
+    //un carré de texte dans la text box
+    txt.cfg = {0,0,0};                  //couleur foreground
+    txt.cbg = {0xFF,0xFF,0xFF};         //couleur background
     txt.s = 16;
     txt.t = "Hello World";
-    txt.dRect.x=  50;
-    txt.dRect.y=  20;
-
-
+    txt.dRect.x=  50;                   //position du text à l'intérieur de la surface
+    txt.dRect.y=  20;                   //w et h ne sont pas utilisé
+    txt.d = textZone;
     if(!(txt.f=TTF_OpenFont("ttf/FreeSerif.ttf",txt.s))) printf("TTF_Openfont : %s\n",TTF_GetError());
 
-    SDL_FillRect(screen, 0, lib.couleurs[C_GRIS]);
+ //mot param;
+    paramtxt.cfg={0,0,0};
+    paramtxt.cbg={0x80,0x80,0x80};
+    paramtxt.s=16;
+    paramtxt.t= "Paramètre :";
+    paramtxt.dRect.x= 10;
+    paramtxt.dRect.y=0;
+    txt.d = paramBox;
+    paramtxt.f= txt.f;
 
-txt.d = textZone;
+
     if(workspace == NULL)
       exit(12);
 
+    //on remplit les surfaces en blancs, en ordre de profondeur
+    SDL_FillRect(screen,   0 , lib.couleurs[C_GRIS]);
     SDL_FillRect(workspace,0 , SDL_MapRGB(screen->format, 255, 255, 255));
     SDL_FillRect(textZone ,0 , SDL_MapRGB(screen->format, 255, 255, 255));
     running = true;
+   // drawTextZone(&paramtxt);
     drawTextZone(&txt);
 
-
+    //setup la position des boutons
     for(int i=0; i<10; i++) {
         posButton[i].x = (Frame_L - (rec_work.w+rec_work.x))/2 + rec_work.w +  rec_work.x- 50 ;
         posButton[i].y = 10+ (50 * i);
@@ -66,9 +87,6 @@ txt.d = textZone;
     button[0] = SDL_LoadBMP("img/bn-init-on.bmp");
     button[1] = SDL_LoadBMP("img/bn-interpo1-on.bmp");
 
-
-
-
 }
 
 
@@ -77,14 +95,17 @@ Frame::~Frame() {
 TTF_CloseFont(font);
 }
 
-
+///////////////////////////////////////////////////////////////////////
+//     Drawing method
+////////////////////////////////////////////////////////
 
 void Frame::drawTextZone(TextZone *txt){
+
    SDL_FillRect(textZone  ,0 , SDL_MapRGB(screen->format, 255, 255, 255));
     if(!(txt->surf=TTF_RenderText_Shaded(txt->f,txt->t.c_str(),txt->cfg,txt->cbg)))printf("renderError : %s\n",TTF_GetError());
     //const char* text = txt->t.c_str();
 
-     SDL_BlitSurface(txt->surf,0,txt->d,&txt->dRect);
+     SDL_BlitSurface(txt->surf, 0, txt->d, &txt->dRect);
 
 }
 
@@ -133,6 +154,18 @@ void Frame::drawNuage(){
         printf("workspace coords : x:%d,%d\t y: %d,%d\n",rec_work.x,rec_work.x+rec_work.w,rec_work.y,rec_work.y+rec_work.h);
         SDL_UpdateRect(workspace,0,0,0,0);
 }
+
+void Frame::drawCubSpline(){
+    app.initMatrix();
+
+
+}
+
+/*----------------------------------------------------------+
+
+//      End draw
+//
+//+----------------------------------------------------------*/
 
 void    Frame::start()
 {
@@ -183,9 +216,6 @@ void    Frame::start()
             }
 
             //Gadget : zoom avec la molette
-
-
-
             } // end switch
         } // end of message processing
 
@@ -195,6 +225,7 @@ void    Frame::start()
 
         SDL_BlitSurface(workspace,NULL,screen,&rec_work);
         SDL_BlitSurface(textZone,NULL,screen,&rec_text);
+
         for(int i=0; i<10; i++) { //colle les boutons
             if(button[i]) SDL_BlitSurface(button[i],0,screen,&posButton[i]);
         }
@@ -227,7 +258,6 @@ void Frame::OnLButtonDown(int x,int y)
 
         }
     }
-
 }
 
 void Frame::OnLButtonup(int x,int y)
@@ -277,9 +307,6 @@ void Frame::buttonAction(int i) //dessine le nuage de point
         break;
     case 2:
         break;
-
-
     }
-
 }
 }
