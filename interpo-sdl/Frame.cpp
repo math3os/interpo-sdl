@@ -1,10 +1,9 @@
 //Utilise libsdl pour dessiner la fenêtre
 
-
 #include "Frame.h"
 #include "libsdl.h"
 #include <SDL/SDL.h>
-//#include <SDL/SDL_tf.h>
+#include <SDL/SDL_ttf.h>
 
 using namespace std;
 namespace interpo
@@ -14,15 +13,71 @@ typedef struct {
     int y;
 } Point;
 
-Frame::Frame() : lib(Frame_L,Frame_H,lib.couleurs[lib.C_GRIS])
+
+
+Frame::Frame() : lib(Frame_L,Frame_H,lib.couleurs[C_GRIS])  //2fois lameme couleur oh?
 {
     debug =1;
-    running = true;
+    text = NULL;
+    screen = lib.getScreen(); //bientot deprecate
+
+    //espace d'affichage
     rec_work.h = (Frame_H)/5*4;
     rec_work.w = (Frame_L)/5*4;
     rec_work.x=10;
     rec_work.y=10;
+    workspace = SDL_CreateRGBSurface(SDL_SWSURFACE,rec_work.w,rec_work.h,32,0,0,0,0 );
 
+    //espace de texte sous l'espace d'affichage
+    rec_text.h= (Frame_H)/5 *.5;
+    rec_text.w = rec_work.w ;
+    rec_text.x= rec_work.x;
+    rec_text.y = rec_work.h+ rec_work.y +8;
+    textZone =  SDL_CreateRGBSurface(SDL_SWSURFACE,rec_text.w,rec_text.h,32,0,0,0,0 );
+
+
+    //zone d'entrer des paramêtres
+    rec_param.y= Frame_H/5*3-10;
+    rec_param.w= Frame_L/5*.9;
+    rec_param.x= Frame_L/5*4+(Frame_L/5-rec_param.w)/2;
+    rec_param.h= Frame_L/5*2;
+    paramBox = SDL_CreateRGBSurface(SDL_SWSURFACE,rec_param.w,rec_param.h,32,0,0,0,0 );
+
+
+
+    //un carré de texte dans la text box
+    txt.cfg = {0,0,0};                  //couleur foreground
+    txt.cbg = {0xFF,0xFF,0xFF};         //couleur background
+    txt.s = 16;
+    txt.t = "Hello World";
+    txt.dRect.x=  50;                   //position du text à l'intérieur de la surface
+    txt.dRect.y=  20;                   //w et h ne sont pas utilisé
+    txt.d = textZone;
+    if(!(txt.f=TTF_OpenFont("ttf/FreeSerif.ttf",txt.s))) printf("TTF_Openfont : %s\n",TTF_GetError());
+
+ //mot param;
+    paramtxt.cfg={0,0,0};
+    paramtxt.cbg={0x80,0x80,0x80};
+    paramtxt.s=16;
+    paramtxt.t= "Paramètre :";
+    paramtxt.dRect.x= 10;
+    paramtxt.dRect.y=0;
+    txt.d = paramBox;
+    paramtxt.f= txt.f;
+
+
+    if(workspace == NULL)
+      exit(12);
+
+    //on remplit les surfaces en blancs, en ordre de profondeur
+    SDL_FillRect(screen, 0, lib.couleurs[C_GRIS]);
+    SDL_FillRect(workspace,0 , SDL_MapRGB(screen->format, 255, 255, 255));
+    SDL_FillRect(textZone ,0 , SDL_MapRGB(screen->format, 255, 255, 255));
+    running = true;
+   // drawTextZone(&paramtxt);
+    drawTextZone(&txt);
+
+    //setup la position des boutons
     for(int i=0; i<10; i++) {
         posButton[i].x = (Frame_L - (rec_work.w+rec_work.x))/2 + rec_work.w +  rec_work.x- 50 ;
         posButton[i].y = 10+ (50 * i);
@@ -32,19 +87,89 @@ Frame::Frame() : lib(Frame_L,Frame_H,lib.couleurs[lib.C_GRIS])
     button[0] = SDL_LoadBMP("img/bn-init-on.bmp");
     button[1] = SDL_LoadBMP("img/bn-interpo1-on.bmp");
 
-
-    //lib.setWorkspace(workspace,rec_work,lib.couleurs[lib.C_BLANC]);
-    workspace = SDL_CreateRGBSurface(SDL_SWSURFACE,rec_work.w,rec_work.h,32,0,0,0,0 );
-    screen = lib.getScreen();
 }
 
 
-Frame::~Frame() {}
+Frame::~Frame() {
+
+TTF_CloseFont(font);
+}
+
+///////////////////////////////////////////////////////////////////////
+//     Drawing method
+////////////////////////////////////////////////////////
+
+void Frame::drawTextZone(TextZone *txt){
+   SDL_FillRect(txt->d  ,0 , SDL_MapRGB(screen->format, 255, 255, 255));
+    if(!(txt->surf=TTF_RenderText_Shaded(txt->f,txt->t.c_str(),txt->cfg,txt->cbg)))printf("renderError : %s\n",TTF_GetError());
+    //const char* text = txt->t.c_str();
+
+     SDL_BlitSurface(txt->surf,0,txt->d,&txt->dRect);
+
+}
+
+void Frame::drawWorkSpace(){ //remplit/efface la zone de points
+    SDL_FillRect(workspace,0 , SDL_MapRGB(screen->format, 255, 255, 255));
+    //plus de détails peuvent etre ajouté comme une grille et une échelle
+}
+void Frame::drawNuage(){
+ pt = app.openFile(); //obtenir la liste;
+        Val *ptStart = pt;
+        wrkXMax = app.getNbVals(); //X max
+        wrkYMax = 1;
+        for (int i=0; i< wrkXMax; i++) { // y max
+            if (pt->y > wrkYMax) {
+                wrkYMax = pt->y;
+                if(debug)printf("plusgrand = %d\n",wrkYMax);
+            }
+            printf("wrkYMax = %d\n", wrkYMax);
+            pt++;
+        }
+        pt = ptStart;
+        // printf("ici\n");
+
+        wrkXPas = rec_work.w / wrkXMax;   // les 2 pas
+        wrkYPas = rec_work.h /wrkYMax;
+
+        unsigned int x;
+        unsigned int y;
+
+        if ( SDL_MUSTLOCK(screen) ) {
+            if ( SDL_LockSurface(workspace) < 0 ) {
+                printf( "Can't lock screen: %s\n", SDL_GetError());
+                return;
+            }
+        }
+
+        for (int i=0; i< wrkXMax; i++) {
+
+            x= pt->x*wrkXPas+rec_work.x-2;
+            y= rec_work.h-(pt->y*wrkYPas)-2;
+            printf("i = %d\t x = %d \t y = %d\n",i,x,y);
+            lib.point(workspace,x , y, lib.couleurs[C_BLEU]);
+            pt++;
+        }
+        if ( SDL_MUSTLOCK(workspace) ) SDL_UnlockSurface(workspace);
+        printf("workspace coords : x:%d,%d\t y: %d,%d\n",rec_work.x,rec_work.x+rec_work.w,rec_work.y,rec_work.y+rec_work.h);
+        SDL_UpdateRect(workspace,0,0,0,0);
+}
+
+void Frame::drawCubSpline(){
+    app.initMatrix();
+
+
+}
+
+/*----------------------------------------------------------+
+
+//      End draw
+//
+//+----------------------------------------------------------*/
 
 void    Frame::start()
 {
-    SDL_FillRect(screen, 0, lib.couleurs[lib.C_GRIS]);
-    SDL_FillRect(workspace,0 , SDL_MapRGB(screen->format, 255, 255, 255));
+
+    drawWorkSpace();
     int done =0;
     while (!done ) {
         // message processing loop
@@ -88,6 +213,8 @@ void    Frame::start()
                 break;
                 printf("fin case mouse \n" );
             }
+
+            //Gadget : zoom avec la molette
             } // end switch
         } // end of message processing
 
@@ -96,6 +223,8 @@ void    Frame::start()
         // clear screen
 
         SDL_BlitSurface(workspace,NULL,screen,&rec_work);
+        SDL_BlitSurface(textZone,NULL,screen,&rec_text);
+
         for(int i=0; i<10; i++) { //colle les boutons
             if(button[i]) SDL_BlitSurface(button[i],0,screen,&posButton[i]);
         }
@@ -128,7 +257,6 @@ void Frame::OnLButtonDown(int x,int y)
 
         }
     }
-
 }
 
 void Frame::OnLButtonup(int x,int y)
@@ -161,62 +289,23 @@ void Frame::switchButtonImg(int i,bool state)
         SDL_UpdateRect(button[1],0,0,0,0);
         break;
     }
+
     }
 }
 
-void Frame::buttonAction(int i)
+void Frame::buttonAction(int i) //dessine le nuage de point
 {
     switch(i) {
     case 0: {
-        pt = app.openFile(); //obtenir la liste;
-        Val *ptStart = pt;
-        wrkXMax = app.getNbVals(); //X max
-        wrkYMax = 1;
-        for (int i=0; i< wrkXMax; i++) { // y max
-            if (pt->y > wrkYMax) {
-                wrkYMax = pt->y;
-                if(debug)printf("plusgrand = %d\n",wrkYMax);
-            }
-            printf("wrkYMax = %d\n", wrkYMax);
-            pt++;
-        }
-        pt = ptStart;
-        // printf("ici\n");
-
-        wrkXPas = rec_work.w / wrkXMax;   // les 2 pas
-        wrkYPas = rec_work.h /wrkYMax;
-
-        unsigned int x;
-        unsigned int y;
-
-        if ( SDL_MUSTLOCK(screen) ) {
-            if ( SDL_LockSurface(workspace) < 0 ) {
-                printf( "Can't lock screen: %s\n", SDL_GetError());
-                return;
-            }
-        }
-
-        for (int i=0; i< wrkXMax; i++) {
-
-            x= pt->x*wrkXPas+rec_work.x-2;
-            y= rec_work.h-(pt->y*wrkYPas)-2;
-            printf("i = %d\t x = %d \t y = %d\n",i,x,y);
-            lib.point(workspace,x , y, lib.couleurs[lib.C_BLEU]);
-            pt++;
-        }
-        if ( SDL_MUSTLOCK(workspace) ) SDL_UnlockSurface(workspace);
-        printf("workspace coords : x:%d,%d\t y: %d,%d\n",rec_work.x,rec_work.x+rec_work.w,rec_work.y,rec_work.y+rec_work.h);
-        SDL_UpdateRect(workspace,0,0,0,0);
+       drawNuage();
         break;
     }
     case 1:
+        txt.t ="Voici mon nouveau Texte!!";
+        drawTextZone(&txt);
+        break;
     case 2:
         break;
-
-
     }
-
 }
-
-
 }
